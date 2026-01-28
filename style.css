@@ -1,0 +1,209 @@
+:root {
+    /* Status colors - soft, muted tones */
+    --idle: #1a1a2e;
+    --thinking: #16213e;
+    --working: #1f3a5f;
+    --subagent-active: #2d4a3e;
+    --alert: #4a2d2d;
+    
+    /* Eye colors */
+    --eye-bg: #f5f5f0;
+    --pupil: #1a1a1a;
+    
+    /* Text */
+    --text-primary: rgba(255, 255, 255, 0.9);
+    --text-secondary: rgba(255, 255, 255, 0.5);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    background-color: var(--idle);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 1.5s ease;
+    overflow: hidden;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3rem;
+}
+
+.companion {
+    position: relative;
+}
+
+.eyes {
+    display: flex;
+    gap: 2.5rem;
+}
+
+.eye {
+    width: 80px;
+    height: 80px;
+    background: var(--eye-bg);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-shadow: 
+        0 0 60px rgba(255, 255, 255, 0.1),
+        inset 0 0 20px rgba(0, 0, 0, 0.05);
+}
+
+.pupil {
+    width: 32px;
+    height: 32px;
+    background: var(--pupil);
+    border-radius: 50%;
+    position: relative;
+    transition: all 0.15s ease-out;
+}
+
+.pupil::after {
+    content: '';
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    top: 6px;
+    left: 6px;
+}
+
+/* States */
+body.idle .pupil {
+    transform: translateY(0);
+}
+
+body.thinking .pupil {
+    animation: thinking 2s ease-in-out infinite;
+}
+
+body.working .pupil {
+    animation: working 0.8s ease-in-out infinite alternate;
+}
+
+body.sleeping .eye {
+    height: 8px;
+    transition: height 0.5s ease;
+}
+
+body.sleeping .pupil {
+    opacity: 0;
+}
+
+/* Animations */
+@keyframes thinking {
+    0%, 100% { transform: translate(-3px, -2px); }
+    25% { transform: translate(3px, -2px); }
+    50% { transform: translate(3px, 2px); }
+    75% { transform: translate(-3px, 2px); }
+}
+
+@keyframes working {
+    0% { transform: translateX(-2px); }
+    100% { transform: translateX(2px); }
+}
+
+@keyframes blink {
+    0%, 45%, 55%, 100% { transform: scaleY(1); }
+    50% { transform: scaleY(0.1); }
+}
+
+.eye {
+    animation: blink 4s ease-in-out infinite;
+    animation-delay: calc(var(--blink-offset, 0) * 1s);
+}
+
+.eye.left { --blink-offset: 0; }
+.eye.right { --blink-offset: 0.05; }
+
+/* Status area */
+.status-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.status-text {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 0.875rem;
+    font-weight: 400;
+    letter-spacing: 0.2em;
+    text-transform: lowercase;
+    color: var(--text-secondary);
+}
+
+.subagents-indicator {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.subagent-dot {
+    width: 6px;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.subagent-dot.active {
+    background: rgba(255, 255, 255, 0.7);
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.2); }
+}
+
+/* Message area */
+.message-area {
+    max-width: 400px;
+    text-align: center;
+    min-height: 3rem;
+}
+
+.message {
+    font-size: 1.125rem;
+    font-weight: 300;
+    color: var(--text-primary);
+    line-height: 1.6;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.message.visible {
+    opacity: 1;
+}
+
+/* Subtle ambient glow */
+.companion::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 250px;
+    height: 250px;
+    background: radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 70%);
+    pointer-events: none;
+    animation: glow 4s ease-in-out infinite;
+}
+
+@keyframes glow {
+    0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+}
