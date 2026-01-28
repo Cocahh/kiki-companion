@@ -207,3 +207,30 @@ body.sleeping .pupil {
     0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
     50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
 }
+
+/* Connection indicator */
+.connection-indicator {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.connection-indicator.connected {
+    background: #4ade80;
+    box-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+}
+
+.connection-indicator.disconnected {
+    background: #f87171;
+    animation: disconnected-pulse 2s ease-in-out infinite;
+}
+
+@keyframes disconnected-pulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}

@@ -1,29 +1,38 @@
 // Kiki Companion - Web Interface
-// Connects to Clawdbot Gateway for real-time status
+// Connects to status.json for real-time updates
 
 class KikiCompanion {
     constructor() {
-        this.state = 'idle'; // idle, thinking, working, sleeping
+        this.state = 'idle';
         this.subagents = 0;
         this.message = '';
-        this.gatewayUrl = 'http://localhost:18789';
-        this.gatewayToken = null;
+        this.statusUrl = './status.json';
+        this.pollInterval = 3000;
         
         this.elements = {
             body: document.body,
             statusText: document.querySelector('.status-text'),
             subagentsIndicator: document.querySelector('.subagents-indicator'),
             message: document.querySelector('.message'),
-            pupils: document.querySelectorAll('.pupil')
+            pupils: document.querySelectorAll('.pupil'),
+            connectionDot: null
         };
         
         this.init();
     }
     
     init() {
+        this.createConnectionIndicator();
         this.setupMouseTracking();
         this.startPolling();
         this.setState('idle');
+    }
+    
+    createConnectionIndicator() {
+        const dot = document.createElement('div');
+        dot.className = 'connection-indicator';
+        document.body.appendChild(dot);
+        this.elements.connectionDot = dot;
     }
     
     setupMouseTracking() {
@@ -60,7 +69,8 @@ class KikiCompanion {
             thinking: 'thinking...',
             working: 'working',
             sleeping: 'resting',
-            subagent: 'delegating'
+            subagent: 'delegating',
+            disconnected: 'offline'
         };
         return texts[state] || state;
     }
@@ -72,7 +82,8 @@ class KikiCompanion {
             working: '#1f3a5f',
             sleeping: '#0f0f1a',
             subagent: '#2d4a3e',
-            alert: '#4a2d2d'
+            alert: '#4a2d2d',
+            disconnected: '#2a1a1a'
         };
         document.body.style.backgroundColor = colors[state] || colors.idle;
     }
@@ -88,49 +99,72 @@ class KikiCompanion {
             this.elements.subagentsIndicator.appendChild(dot);
         }
         
-        if (count > 0) {
+        if (count > 0 && this.state !== 'working') {
             this.setState('subagent');
         }
     }
     
     showMessage(text) {
+        if (!text) {
+            this.elements.message.classList.remove('visible');
+            return;
+        }
         this.elements.message.textContent = text;
         this.elements.message.classList.add('visible');
-        
-        setTimeout(() => {
-            this.elements.message.classList.remove('visible');
-        }, 5000);
+    }
+    
+    setConnected(connected) {
+        if (this.elements.connectionDot) {
+            this.elements.connectionDot.classList.toggle('connected', connected);
+            this.elements.connectionDot.classList.toggle('disconnected', !connected);
+        }
     }
     
     async startPolling() {
-        // Poll gateway for status updates
-        setInterval(async () => {
+        const poll = async () => {
             try {
-                await this.pollStatus();
+                const response = await fetch(this.statusUrl + '?t=' + Date.now());
+                if (!response.ok) throw new Error('Status fetch failed');
+                
+                const data = await response.json();
+                this.setConnected(true);
+                
+                // Update state
+                if (data.state) {
+                    this.setState(data.state);
+                }
+                
+                // Update subagents
+                if (typeof data.subagents === 'number') {
+                    this.updateSubagents(data.subagents);
+                }
+                
+                // Update message
+                this.showMessage(data.message || '');
+                
+                // Check staleness (if no update in 2 minutes, show as idle)
+                if (data.lastUpdate) {
+                    const lastUpdate = new Date(data.lastUpdate);
+                    const now = new Date();
+                    const diffMinutes = (now - lastUpdate) / 1000 / 60;
+                    
+                    if (diffMinutes > 2 && this.state !== 'idle') {
+                        this.setState('idle');
+                        this.showMessage('');
+                    }
+                }
+                
             } catch (e) {
-                // Gateway not available, stay idle
+                this.setConnected(false);
+                // Don't change state on error, just show disconnected indicator
             }
-        }, 2000);
-    }
-    
-    async pollStatus() {
-        // TODO: Connect to actual Clawdbot Gateway API
-        // For now, simulate states for demo
+        };
         
-        // This would normally fetch from:
-        // GET /api/sessions/list to check active sessions
-        // GET /api/sessions/{id}/status for detailed status
-    }
-    
-    // Manual controls for testing
-    demo() {
-        const states = ['idle', 'thinking', 'working', 'sleeping'];
-        let i = 0;
+        // Initial poll
+        await poll();
         
-        setInterval(() => {
-            this.setState(states[i % states.length]);
-            i++;
-        }, 3000);
+        // Continue polling
+        setInterval(poll, this.pollInterval);
     }
 }
 
@@ -139,6 +173,3 @@ const kiki = new KikiCompanion();
 
 // Expose for console testing
 window.kiki = kiki;
-
-// Demo mode - uncomment to test states
-// kiki.demo();
