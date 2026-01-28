@@ -1,13 +1,15 @@
 // Kiki Companion - Web Interface
-// Connects to status.json for real-time updates
+// Polls local status server for real-time updates
 
 class KikiCompanion {
     constructor() {
         this.state = 'idle';
         this.subagents = 0;
         this.message = '';
-        this.statusUrl = './status.json';
-        this.pollInterval = 3000;
+        this.localUrl = 'http://localhost:3847/status';
+        this.fallbackUrl = './status.json';
+        this.pollInterval = 1500; // 1.5 seconds for snappier updates
+        this.useLocal = true;
         
         this.elements = {
             body: document.body,
@@ -57,6 +59,7 @@ class KikiCompanion {
     }
     
     setState(state) {
+        if (this.state === state) return;
         this.state = state;
         this.elements.body.className = state;
         this.elements.statusText.textContent = this.getStatusText(state);
@@ -89,6 +92,7 @@ class KikiCompanion {
     }
     
     updateSubagents(count) {
+        if (this.subagents === count) return;
         this.subagents = count;
         this.elements.subagentsIndicator.innerHTML = '';
         
@@ -98,66 +102,89 @@ class KikiCompanion {
             dot.style.animationDelay = `${i * 0.2}s`;
             this.elements.subagentsIndicator.appendChild(dot);
         }
-        
-        if (count > 0 && this.state !== 'working') {
-            this.setState('subagent');
-        }
     }
     
     showMessage(text) {
+        if (this.elements.message.textContent === text) return;
         if (!text) {
             this.elements.message.classList.remove('visible');
+            this.elements.message.textContent = '';
             return;
         }
         this.elements.message.textContent = text;
         this.elements.message.classList.add('visible');
     }
     
-    setConnected(connected) {
+    setConnected(connected, isLocal = false) {
         if (this.elements.connectionDot) {
             this.elements.connectionDot.classList.toggle('connected', connected);
             this.elements.connectionDot.classList.toggle('disconnected', !connected);
+            this.elements.connectionDot.classList.toggle('local', isLocal);
+        }
+    }
+    
+    async fetchStatus(url) {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 2000);
+        
+        try {
+            const response = await fetch(url + '?t=' + Date.now(), {
+                signal: controller.signal
+            });
+            clearTimeout(timeout);
+            if (!response.ok) throw new Error('Status fetch failed');
+            return await response.json();
+        } catch (e) {
+            clearTimeout(timeout);
+            throw e;
         }
     }
     
     async startPolling() {
         const poll = async () => {
-            try {
-                const response = await fetch(this.statusUrl + '?t=' + Date.now());
-                if (!response.ok) throw new Error('Status fetch failed');
-                
-                const data = await response.json();
-                this.setConnected(true);
-                
-                // Update state
-                if (data.state) {
-                    this.setState(data.state);
+            let data = null;
+            let isLocal = false;
+            
+            // Try local first
+            if (this.useLocal) {
+                try {
+                    data = await this.fetchStatus(this.localUrl);
+                    isLocal = true;
+                } catch (e) {
+                    // Local failed, try fallback
+                    this.useLocal = false;
                 }
-                
-                // Update subagents
-                if (typeof data.subagents === 'number') {
-                    this.updateSubagents(data.subagents);
-                }
-                
-                // Update message
-                this.showMessage(data.message || '');
-                
-                // Check staleness (if no update in 2 minutes, show as idle)
-                if (data.lastUpdate) {
-                    const lastUpdate = new Date(data.lastUpdate);
-                    const now = new Date();
-                    const diffMinutes = (now - lastUpdate) / 1000 / 60;
-                    
-                    if (diffMinutes > 2 && this.state !== 'idle') {
-                        this.setState('idle');
-                        this.showMessage('');
-                    }
-                }
-                
-            } catch (e) {
-                this.setConnected(false);
-                // Don't change state on error, just show disconnected indicator
             }
+            
+            // Fallback to GitHub Pages
+            if (!data) {
+                try {
+                    data = await this.fetchStatus(this.fallbackUrl);
+                    // Re-enable local check periodically
+                    setTimeout(() => { this.useLocal = true; }, 30000);
+                } catch (e) {
+                    this.setConnected(false);
+                    return;
+                }
+            }
+            
+            this.setConnected(true, isLocal);
+            
+            // Update state
+            if (data.state) {
+                this.setState(data.state);
+            }
+            
+            // Update subagents
+            if (typeof data.subagents === 'number') {
+                this.updateSubagents(data.subagents);
+                if (data.subagents > 0 && data.state === 'idle') {
+                    this.setState('subagent');
+                }
+            }
+            
+            // Update message
+            this.showMessage(data.message || '');
         };
         
         // Initial poll
