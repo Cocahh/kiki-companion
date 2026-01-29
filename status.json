@@ -1,6 +1,6 @@
 {
-  "state": "working",
-  "message": "checking calendar",
+  "state": "idle",
+  "message": "",
   "subagents": 0,
-  "lastUpdate": "2026-01-29T09:40:00Z"
+  "lastUpdate": "2026-01-29T09:40:30Z"
 }
