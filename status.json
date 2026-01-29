@@ -1,6 +1,6 @@
 {
-  "state": "working",
-  "message": "installing missing dependencies for dashboard",
+  "state": "idle",
+  "message": "",
   "subagents": 0,
-  "lastUpdate": "2026-01-29T07:13:30Z"
+  "lastUpdate": "2026-01-29T07:14:00Z"
 }
