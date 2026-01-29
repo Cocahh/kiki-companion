@@ -1,6 +1,6 @@
 {
-  "state": "idle",
-  "message": "",
+  "state": "working",
+  "message": "listening to your voice message",
   "subagents": 0,
-  "lastUpdate": "2026-01-29T07:20:30Z"
+  "lastUpdate": "2026-01-29T07:27:00Z"
 }
