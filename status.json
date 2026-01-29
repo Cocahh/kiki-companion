@@ -1,6 +1,6 @@
 {
-  "state": "reading",
-  "message": "reading mmerrill dms for pro alliance requirements",
+  "state": "idle",
+  "message": "finished pro alliance leaderboard and dashboard",
   "subagents": 0,
-  "lastUpdate": "2026-01-29T03:44:30-03:00"
+  "lastUpdate": "2026-01-29T03:55:00-03:00"
 }
