@@ -1,94 +1,68 @@
 class FlavorEngine {
     constructor() {
-        this.prefixes = [
-            "⚡ SYSTEM:",
-            "» ALERT:",
-            "★ UPDATE:",
-            "⟳ PROCESS:",
-            "◈ STATUS:"
-        ];
-        
         this.vocabulary = {
             coding: [
-                "weaving digital spells", 
-                "restructuring logic gates", 
-                "optimizing the matrix", 
-                "compiling neural thoughts", 
-                "injecting code fragments",
-                "refactoring reality",
-                "debug_mode::engaged",
-                "synchronizing syntax"
+                "Crafting logic...",
+                "Refining the architecture...",
+                "Weaving digital threads...",
+                "Optimizing patterns...",
+                "structuring thoughts into code...",
+                "Building robust systems..."
             ],
             thinking: [
-                "analyzing vectors", 
-                "querying deep memory", 
-                "calculating probabilities", 
-                "traversing decision trees", 
-                "simulating outcomes",
-                "navigating latent space",
-                "pondering existence",
-                "running cognitive cycles"
+                "Contemplating...",
+                "Analyzing possibilities...",
+                "Connecting abstract concepts...",
+                "Deep in thought...",
+                "Simulating outcomes...",
+                "Reviewing context..."
             ],
             writing: [
-                "encoding linguistic data", 
-                "transcribing thoughts", 
-                "generating narrative structures", 
-                "serializing output",
-                "manifesting words",
-                "streaming text buffer"
+                "Drafting response...",
+                "Curating words...",
+                "Expressing ideas...",
+                "Synthesizing information...",
+                "Composing narrative..."
             ],
             reading: [
-                "ingesting data streams", 
-                "parsing input", 
-                "absorbing context", 
-                "scanning external logs",
-                "decoding visual input"
-            ],
-            error: [
-                "detecting anomalies", 
-                "recalibrating sensors", 
-                "fixing quantum entanglements"
+                "Absorbing knowledge...",
+                "Reading context...",
+                "Understanding nuance...",
+                "Parsing details...",
+                "Scanning for insights..."
             ],
             idle: [
-                "awaiting input", 
-                "monitoring system vitals", 
-                "standby mode active", 
-                "observing timeline",
-                "idle cycles: 99%"
+                "Observing...",
+                "At rest...",
+                "Waiting for inspiration...",
+                "Mindful presence...",
+                "Ready to assist..."
             ]
         };
     }
 
     generate(rawMessage, state) {
-        // If raw message is too short, just return it stylized
-        if (!rawMessage || rawMessage.length < 3) return this.vocabulary.idle[0];
+        if (!rawMessage || rawMessage.length < 3) return { title: this.pick(this.vocabulary.idle), detail: "" };
 
         const lower = rawMessage.toLowerCase();
-        let flavor = rawMessage;
-
-        // Simple keyword matching for flavor replacement
-        // We actually want to KEEP the user's message but maybe prefix/suffix it or show a cool "Action" title
-        
-        // Strategy: Return an object { title, detail }
-        // Title is the "Vibe", Detail is the raw message stylized
-        
-        let vibe = "PROCESSING";
+        let title = "Processing...";
         
         if (lower.includes("code") || lower.includes("function") || lower.includes("script") || lower.includes("dev")) {
-            vibe = this.pick(this.vocabulary.coding);
+            title = this.pick(this.vocabulary.coding);
         } else if (lower.includes("think") || lower.includes("plan") || lower.includes("wonder")) {
-            vibe = this.pick(this.vocabulary.thinking);
+            title = this.pick(this.vocabulary.thinking);
         } else if (lower.includes("writ") || lower.includes("typ") || lower.includes("draft")) {
-            vibe = this.pick(this.vocabulary.writing);
+            title = this.pick(this.vocabulary.writing);
         } else if (lower.includes("read") || lower.includes("look") || lower.includes("check")) {
-            vibe = this.pick(this.vocabulary.reading);
+            title = this.pick(this.vocabulary.reading);
         } else if (state === 'idle') {
-            vibe = this.pick(this.vocabulary.idle);
+            title = this.pick(this.vocabulary.idle);
         }
 
+        // Return title (Flavor) and detail (Original Message, cleaned up)
         return {
-            title: vibe,
-            detail: rawMessage.toLowerCase()
+            title: title,
+            detail: rawMessage
         };
     }
 
@@ -97,145 +71,75 @@ class FlavorEngine {
     }
 }
 
-class Typewriter {
-    constructor(element) {
-        this.element = element;
-        this.queue = [];
-        this.isTyping = false;
-        this.currentText = "";
-    }
-
-    type(text, speed = 30) {
-        // If it's the same text, don't retype
-        if (text === this.currentText) return;
-        this.currentText = text;
-        
-        // Clear existing interval if any (hard reset for new message)
-        if (this.timer) clearInterval(this.timer);
-        
-        this.element.textContent = "";
-        let i = 0;
-        
-        this.timer = setInterval(() => {
-            if (i < text.length) {
-                this.element.textContent += text.charAt(i);
-                i++;
-            } else {
-                clearInterval(this.timer);
-            }
-        }, speed);
-    }
-}
-
 class KikiCompanion {
     constructor() {
         this.state = 'idle';
         this.flavor = new FlavorEngine();
-        this.localUrl = 'http://localhost:3847/status';
-        this.fallbackUrl = './status.json';
-        this.pollInterval = 1000;
+        // Use the RAW gist URL to bypass caching issues (though raw is usually cached for ~5 mins)
+        // Adding a timestamp query param helps bust cache on fetch
+        this.remoteUrl = 'https://gist.githubusercontent.com/Cocahh/2231eed9bd7e74a78eaa27e08764ee11/raw/kiki-status.json';
+        this.pollInterval = 5000; // Poll every 5 seconds (GitHub rate limits are high for raw, but let's be polite)
         
         this.elements = {
             body: document.body,
-            statusBadge: document.querySelector('.status-badge'),
-            message: document.querySelector('.message'),
-            subMessage: document.querySelector('.sub-message'),
-            pupils: document.querySelectorAll('.pupil'),
-            eyesContainer: document.querySelector('.eyes-container'),
-            connectionDot: document.querySelector('.dot'),
-            connectionText: document.querySelector('.connection-status .text'),
-            subagents: document.querySelector('.subagents')
+            statusLabel: document.querySelector('.status-label'),
+            mainMessage: document.querySelector('.main-message'),
+            flavorText: document.querySelector('.flavor-text'),
+            subagentsContainer: document.querySelector('.subagents-container'),
+            connectionText: document.querySelector('.connection-text'),
+            statusDot: document.querySelector('.status-dot'),
+            pulseRing: document.querySelector('.pulse-ring')
         };
         
-        this.typewriter = new Typewriter(this.elements.message);
         this.init();
     }
     
     init() {
-        this.setupMouseTracking();
         this.startPolling();
     }
     
-    setupMouseTracking() {
-        document.addEventListener('mousemove', (e) => {
-            if (this.state === 'sleeping') return;
-            
-            this.elements.pupils.forEach(pupil => {
-                const eye = pupil.parentElement;
-                const rect = eye.getBoundingClientRect();
-                const eyeCenterX = rect.left + rect.width / 2;
-                const eyeCenterY = rect.top + rect.height / 2;
-                
-                const angle = Math.atan2(e.clientY - eyeCenterY, e.clientX - eyeCenterX);
-                const distance = Math.min(15, Math.hypot(e.clientX - eyeCenterX, e.clientY - eyeCenterY) / 15);
-                
-                const x = Math.cos(angle) * distance;
-                const y = Math.sin(angle) * distance;
-                
-                // Add a little robotic delay/smoothing in CSS, here just set target
-                pupil.style.transform = `translate(${x}px, ${y}px)`;
-            });
-        });
-    }
-    
     updateVisuals(state, message, subagents) {
-        // 1. Update State Attribute
+        // 1. Update State on Body (for CSS themes)
         this.elements.body.setAttribute('data-state', state);
         
-        // 2. Handle Flavor Text
+        // 2. Generate Flavor Text
         const { title, detail } = this.flavor.generate(message, state);
         
-        // 3. Update Text Elements
-        this.typewriter.type(title.toUpperCase());
-        this.elements.subMessage.textContent = `>> ${detail}`;
-        
-        // 4. Update Badge
-        this.elements.statusBadge.textContent = state.toUpperCase();
-        
-        // 5. Update Subagents
-        this.renderSubagents(subagents);
-        
-        // 6. Eye Animations based on state
-        this.updateEyeBehavior(state);
-    }
-    
-    updateEyeBehavior(state) {
-        const container = this.elements.eyesContainer;
-        // Remove all animation classes first
-        container.classList.remove('scanning', 'processing');
-        
-        if (state === 'working') {
-            container.classList.add('scanning');
-        } else if (state === 'thinking') {
-            container.classList.add('processing');
+        // 3. Update Text Content
+        // If message is very short/empty, use the flavor title as the main message
+        if (message.length < 5) {
+             this.elements.mainMessage.textContent = title;
+             this.elements.flavorText.textContent = "";
+        } else {
+             // Otherwise: Flavor as main, Real message as detail
+             this.elements.mainMessage.textContent = title;
+             this.elements.flavorText.textContent = detail;
         }
+
+        // 4. Update Status Label
+        this.elements.statusLabel.textContent = state.toUpperCase();
+        
+        // 5. Render Subagents
+        this.renderSubagents(subagents);
     }
     
     renderSubagents(count) {
-        this.elements.subagents.innerHTML = '';
-        for (let i = 0; i < count; i++) {
-            const node = document.createElement('div');
-            node.className = 'agent-node';
-            node.style.animationDelay = `${i * 0.2}s`;
-            this.elements.subagents.appendChild(node);
+        this.elements.subagentsContainer.innerHTML = '';
+        if (count > 0) {
+            for (let i = 0; i < count; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'agent-dot active';
+                this.elements.subagentsContainer.appendChild(dot);
+            }
         }
     }
     
     async startPolling() {
         const poll = async () => {
             try {
-                // Try local server first
-                let response;
-                try {
-                    const controller = new AbortController();
-                    const id = setTimeout(() => controller.abort(), 500);
-                    response = await fetch(this.localUrl + '?t=' + Date.now(), { signal: controller.signal });
-                    clearTimeout(id);
-                } catch (e) {
-                    // Fallback to file if server down (e.g. GitHub pages)
-                    response = await fetch(this.fallbackUrl + '?t=' + Date.now());
-                }
-
+                // Fetch with cache busting
+                const response = await fetch(`${this.remoteUrl}?t=${Date.now()}`);
+                
                 if (!response.ok) throw new Error('Fetch failed');
                 
                 const data = await response.json();
@@ -244,7 +148,7 @@ class KikiCompanion {
                 this.setConnected(true);
                 
             } catch (e) {
-                console.error(e);
+                console.error("Polling error:", e);
                 this.setConnected(false);
             }
         };
@@ -255,12 +159,11 @@ class KikiCompanion {
     
     setConnected(isConnected) {
         if (isConnected) {
-            this.elements.connectionDot.classList.add('connected');
-            this.elements.connectionText.textContent = "LINK_ACTIVE";
+            this.elements.connectionText.textContent = "Synced";
+            this.elements.connectionText.style.opacity = "0.5";
         } else {
-            this.elements.connectionDot.classList.remove('connected');
-            this.elements.connectionText.textContent = "LINK_LOST";
-            this.elements.body.setAttribute('data-state', 'offline');
+            this.elements.connectionText.textContent = "Offline";
+            this.elements.connectionText.style.opacity = "1";
         }
     }
 }

@@ -14,3 +14,7 @@ cat > /Users/luizleite/clawd/kiki-companion/status.json << EOF
   "lastUpdate": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 }
 EOF
+
+# Auto-publish
+echo "Publishing..."
+/Users/luizleite/clawd/kiki-companion/publish_status.sh

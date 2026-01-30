@@ -6,40 +6,38 @@
     <title>Kiki • Companion</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&family=Orbitron:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Importing Lora (Serif) and Inter (Sans-Serif) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body data-state="idle">
     
     <div class="container">
-        <div class="glass-panel">
-            <div class="eyes-container">
-                <div class="eye left">
-                    <div class="pupil"></div>
+        <main class="card">
+            <header class="status-header">
+                <div class="status-indicator">
+                    <div class="pulse-ring"></div>
+                    <div class="status-dot"></div>
                 </div>
-                <div class="eye right">
-                    <div class="pupil"></div>
-                </div>
+                <span class="status-label">System Idle</span>
+            </header>
+            
+            <div class="content-area">
+                <h1 class="main-message">Waiting for input...</h1>
+                <p class="flavor-text">Observing the digital horizon.</p>
             </div>
             
-            <div class="status-badge">SYSTEM IDLE</div>
-            
-            <div class="message-area">
-                <div class="message-container">
-                    <p class="message"></p><span class="cursor"></span>
+            <div class="footer-info">
+                <div class="subagents-container">
+                    <!-- Subagents will be rendered as subtle dots here -->
                 </div>
-                <p class="sub-message"></p>
+                <div class="connection-status">
+                    <span class="connection-text">Syncing...</span>
+                </div>
             </div>
-            
-            <div class="subagents"></div>
-        </div>
+        </main>
     </div>
 
-    <div class="connection-status">
-        <div class="dot"></div>
-        <span class="text">LINK_ESTABLISHED</span>
-    </div>
-    
     <script src="script.js"></script>
 </body>
 </html>
