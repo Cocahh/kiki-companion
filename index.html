@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kiki</title>
-    <meta name="description" content="Kiki - Your AI Companion">
+    <title>Kiki • Companion</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Cormorant+Garamond:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&family=Orbitron:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body data-state="idle">
+    
     <div class="container">
-        <div class="companion">
-            <div class="eyes">
+        <div class="glass-panel">
+            <div class="eyes-container">
                 <div class="eye left">
                     <div class="pupil"></div>
                 </div>
@@ -21,16 +21,23 @@
                     <div class="pupil"></div>
                 </div>
             </div>
+            
+            <div class="status-badge">SYSTEM IDLE</div>
+            
+            <div class="message-area">
+                <div class="message-container">
+                    <p class="message"></p><span class="cursor"></span>
+                </div>
+                <p class="sub-message"></p>
+            </div>
+            
+            <div class="subagents"></div>
         </div>
-        
-        <div class="status-area">
-            <p class="status-text">idle</p>
-            <div class="subagents-indicator"></div>
-        </div>
-        
-        <div class="message-area">
-            <p class="message"></p>
-        </div>
+    </div>
+
+    <div class="connection-status">
+        <div class="dot"></div>
+        <span class="text">LINK_ESTABLISHED</span>
     </div>
     
     <script src="script.js"></script>
